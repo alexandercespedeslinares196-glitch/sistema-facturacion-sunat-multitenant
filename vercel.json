@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "name": "sistema-facturacion-sunat-multitenant",
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/index.html"
+    }
+  ],
+  "env": {
+    "SUNAT_DEFAULT_ENV": "BETA"
+  }
+}

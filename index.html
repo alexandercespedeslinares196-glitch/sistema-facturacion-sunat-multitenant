@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Facturación Electrónica SUNAT (UBL 2.1) — Portal Cliente + APK & Panel Admin</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --slate-500: #64748b;
+      --slate-200: #e2e8f0;
+      --emerald-600: #059669;
+      --emerald-500: #10b981;
+      --emerald-100: #d1fae5;
+      --emerald-900: #064e3b;
+      --amber-500: #f59e0b;
+      --amber-100: #fef3c7;
+      --amber-900: #78350f;
+      --purple-600: #7c3aed;
+      --purple-100: #ede9fe;
+      --purple-900: #4c1d95;
+      --blue-600: #2563eb;
+      --blue-100: #dbeafe;
+      --red-600: #dc2626;
+      --red-100: #fee2e2;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--slate-900); line-height: 1.5; }
+    header {
+      background: var(--slate-900); color: #fff; padding: 16px 24px;
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px;
+      border-bottom: 3px solid var(--emerald-500);
+    }
+    .brand-tag { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #34d399; font-weight: 700; }
+    .brand-title { font-size: 19px; font-weight: 800; margin-top: 2px; }
+    .nav-tabs { display: flex; gap: 10px; flex-wrap: wrap; }
+    .tab-btn {
+      border: 1px solid #334155; background: var(--slate-800); color: #cbd5e1;
+      padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.15s;
+    }
+    .tab-btn.active-client { background: var(--emerald-500); color: var(--slate-900); border-color: var(--emerald-500); }
+    .tab-btn.active-admin { background: var(--amber-500); color: var(--slate-900); border-color: var(--amber-500); }
+    .container { max-width: 1280px; margin: 0 auto; padding: 22px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--slate-200); border-radius: 14px;
+      padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+    }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+    .grid-5 { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 10px; }
+    .badge {
+      display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+    }
+    .badge-green { background: var(--emerald-100); color: var(--emerald-900); }
+    .badge-amber { background: var(--amber-100); color: var(--amber-900); }
+    .badge-purple { background: var(--purple-100); color: var(--purple-900); }
+    .badge-blue { background: var(--blue-100); color: #1e3a8a; }
+    .badge-red { background: var(--red-100); color: #7f1d1d; }
+    label { display: block; font-size: 12px; font-weight: 700; color: var(--slate-600); margin-bottom: 5px; }
+    input, select, textarea {
+      width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; background: #fff;
+    }
+    .doc-card {
+      border: 2px solid var(--slate-200); border-radius: 10px; padding: 12px; cursor: pointer; background: #f8fafc; transition: 0.15s;
+    }
+    .doc-card.selected { border-color: var(--slate-900); background: var(--slate-900); color: #fff; }
+    .doc-card.selected-internal { border-color: var(--purple-600); background: var(--purple-900); color: #fff; }
+    .btn {
+      padding: 10px 18px; border-radius: 10px; border: none; font-size: 13px; font-weight: 700; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary { background: var(--emerald-600); color: #fff; }
+    .btn-purple { background: var(--purple-600); color: #fff; }
+    .btn-dark { background: var(--slate-900); color: #fff; }
+    .btn-amber { background: var(--amber-500); color: var(--slate-900); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f8fafc; text-align: left; padding: 11px 14px; font-size: 11px; text-transform: uppercase; color: var(--slate-500); border-bottom: 1px solid var(--slate-200); }
+    td { padding: 12px 14px; border-bottom: 1px solid var(--slate-200); vertical-align: middle; }
+    .mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.65); display: none; justify-content: center; align-items: center; z-index: 50; padding: 16px;
+    }
+    .modal { background: #fff; max-width: 660px; width: 100%; border-radius: 16px; padding: 24px; max-height: 90vh; overflow-y: auto; }
+    .tenant-card {
+      border: 2px solid var(--slate-200); border-radius: 12px; padding: 14px; cursor: pointer; transition: 0.15s;
+    }
+    .tenant-card.active { border-color: var(--amber-500); background: #fffbeb; }
+    pre { background: var(--slate-900); color: #a7f3d0; padding: 14px; border-radius: 10px; font-size: 12px; overflow-x: auto; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="brand-tag">SUNAT UBL 2.1 Directo WS • Aislamiento Multi-Tenant por empresa_id</div>
+    <div class="brand-title">Sistema de Facturación Electrónica Web + APK & Administración Multiempresa</div>
+  </div>
+  <div class="nav-tabs">
+    <button id="btnTabCliente" class="tab-btn active-client" onclick="cambiarComponente('CLIENTE')">
+      1. Aplicación Web Cliente + Descarga APK
+    </button>
+    <button id="btnTabAdmin" class="tab-btn" onclick="cambiarComponente('ADMIN')">
+      2. Panel Administrador (CDT, SOL Secundario & Salud)
+    </button>
+  </div>
+</header>
+
+<div class="container">
+  <!-- ===================================================================== -->
+  <!-- COMPONENTE 1: APLICACIÓN WEB PARA EL CLIENTE + DESCARGA DE APK        -->
+  <!-- ===================================================================== -->
+  <section id="vistaCliente">
+    <div class="card flex-between" style="background: linear-gradient(90deg, #ffffff 0%, #f0fdf4 100%);">
+      <div style="flex: 1; min-width: 280px;">
+        <span class="badge badge-green">AISLAMIENTO ESTRICTO EN BD (WHERE empresa_id = :tenant_id)</span>
+        <h2 style="font-size: 16px; margin-top: 6px;">Sesión Activa de Empresa Cliente (Datos Independientes)</h2>
+        <p style="font-size: 12px; color: var(--slate-600); margin-bottom: 8px;">
+          Cambia de empresa para comprobar cómo las series, facturas, boletas y notas de venta son 100% independientes entre empresas:
+        </p>
+        <select id="selectEmpresaCliente" onchange="cambiarEmpresaCliente()" style="max-width: 560px; font-weight: 700;"></select>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button class="btn btn-dark" onclick="abrirModalApk()">
+          📲 Descargar APK Android (v2.4.0)
+        </button>
+      </div>
+    </div>
+
+    <!-- Formulario de Emisión -->
+    <div class="card">
+      <div class="flex-between" style="margin-bottom: 14px;">
+        <div>
+          <h3 id="tituloEmisionEmpresa" style="font-size: 16px; font-weight: 800;">Emitir Comprobante</h3>
+          <p id="subtituloConexionSunat" style="font-size: 12px; color: var(--slate-500);"></p>
+        </div>
+        <span id="badgeDestinoActual" class="badge badge-green">ENVÍO DIRECTO A SUNAT (SOAP WS)</span>
+      </div>
+
+      <!-- Selector de los 5 Tipos de Documento (4 SUNAT + 1 Nota de Venta Interna) -->
+      <div class="grid-5" id="gridTiposDoc" style="margin-bottom: 16px;"></div>
+
+      <!-- Aviso dinámico para Nota de Venta Interna -->
+      <div id="avisoNotaVentaInterna" style="display:none; background: var(--purple-100); border: 1px solid #c4b5fd; color: var(--purple-900); padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; font-size: 13px;">
+        <strong>🔒 Nota de Venta de Uso Interno Seleccionada:</strong> Este documento genera correlativo interno (<code class="mono">NV01</code>) y comprobante PDF/Ticket para control de caja e inventario, pero <strong>NO se firma con el CDT ni se envía a los Web Services de SUNAT</strong>.
+      </div>
+
+      <!-- Campos de Referencia para Notas de Crédito (07) y Débito (08) -->
+      <div id="bloqueReferenciaNota" style="display:none; background: #fffbeb; border: 1px solid #fde68a; padding: 14px; border-radius: 10px; margin-bottom: 16px;">
+        <div class="grid-3">
+          <div>
+            <label>Comprobante Modificado (Factura/Boleta)</label>
+            <input id="inputDocAfectado" value="F001-00000142" />
+          </div>
+          <div>
+            <label id="labelCatalogoNota">Motivo SUNAT (Catálogo 09 / 10)</label>
+            <select id="selectMotivoNota"></select>
+          </div>
+          <div>
+            <label>Sustento / Motivo de la Nota</label>
+            <input id="inputSustentoNota" value="Descuento comercial o ajuste post-emisión" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Datos del Receptor e Ítem -->
+      <div class="grid-4" style="margin-bottom: 14px;">
+        <div>
+          <label>Serie Asignada</label>
+          <input id="inputSerie" class="mono" value="F001" />
+        </div>
+        <div>
+          <label id="labelTipoDocCliente">RUC / DNI del Cliente</label>
+          <input id="inputClienteDoc" class="mono" value="20518963214" />
+        </div>
+        <div style="grid-column: span 2;">
+          <label>Razón Social o Nombre Completo del Cliente</label>
+          <input id="inputClienteNombre" value="CONSTRUCTORA Y SERVICIOS ANDINOS S.A.C." />
+        </div>
+      </div>
+
+      <div class="grid-4" style="margin-bottom: 16px; background: #f8fafc; padding: 14px; border-radius: 10px;">
+        <div style="grid-column: span 2;">
+          <label>Descripción del Producto o Servicio</label>
+          <input id="inputItemDesc" value="Suministro de Equipos / Servicio Especializado" />
+        </div>
+        <div>
+          <label>Cantidad</label>
+          <input id="inputItemCant" type="number" step="1" min="1" value="2" oninput="recalcularTotales()" />
+        </div>
+        <div>
+          <label>Precio Unitario (Inc. IGV S/)</label>
+          <input id="inputItemPrecio" type="number" step="0.01" min="1" value="590.00" oninput="recalcularTotales()" />
+        </div>
+      </div>
+
+      <div class="flex-between" style="border-top: 1px solid var(--slate-200); padding-top: 14px;">
+        <div style="font-size: 13px;">
+          Op. Gravada: <strong id="lblGravada">S/ 1000.00</strong> &nbsp;|&nbsp;
+          IGV (18%): <strong id="lblIgv">S/ 180.00</strong> &nbsp;|&nbsp;
+          Importe Total: <strong id="lblTotal" style="font-size: 17px; color: var(--slate-900);">S/ 1180.00</strong>
+        </div>
+        <button id="btnEmitir" class="btn btn-primary" onclick="emitirComprobante()">
+          ⚡ Firmar XML con CDT (.pfx) y Enviar a SUNAT
+        </button>
+      </div>
+    </div>
+
+    <!-- Listado de Comprobantes Aislados por Empresa -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <div class="flex-between" style="padding: 16px 20px; border-bottom: 1px solid var(--slate-200);">
+        <div>
+          <h3 id="tituloTablaComprobantes" style="font-size: 15px; font-weight: 800;">Historial de Comprobantes</h3>
+          <p style="font-size: 12px; color: var(--slate-500);">
+            Solo se muestran los documentos con <code class="mono" id="lblFiltroSql">empresa_id = 1</code>. Ninguna otra empresa puede consultar estos registros.
+          </p>
+        </div>
+        <span id="contadorRegistrosEmpresa" class="badge badge-blue">0 comprobantes</span>
+      </div>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Numeración</th>
+              <th>Tipo Documento</th>
+              <th>Fecha</th>
+              <th>Cliente Receptor</th>
+              <th style="text-align:right;">Gravada</th>
+              <th style="text-align:right;">IGV</th>
+              <th style="text-align:right;">Total</th>
+              <th>Envío SUNAT / Estado</th>
+              <th>Artefactos</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyComprobantesCliente"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- COMPONENTE 2: PANEL DE ADMINISTRACIÓN MULTIEMPRESA (CDT, SOL Y SALUD) -->
+  <!-- ===================================================================== -->
+  <section id="vistaAdmin" style="display: none;">
+    <!-- Salud Global del Sistema y Endpoints SUNAT -->
+    <div class="grid-4" style="margin-bottom: 20px;">
+      <div class="card" style="margin-bottom:0;">
+        <span class="badge badge-green">OPERATIVO 99.98%</span>
+        <h4 style="font-size:13px; color:var(--slate-500); margin-top:8px;">WS SUNAT Producción</h4>
+        <div style="font-size:20px; font-weight:800; margin-top:2px;">134 ms</div>
+        <p class="mono" style="font-size:11px; color:var(--slate-500); margin-top:4px;">e-factura.sunat.gob.pe</p>
+      </div>
+      <div class="card" style="margin-bottom:0;">
+        <span class="badge badge-green">OPERATIVO</span>
+        <h4 style="font-size:13px; color:var(--slate-500); margin-top:8px;">WS SUNAT Beta (Homologación)</h4>
+        <div style="font-size:20px; font-weight:800; margin-top:2px;">96 ms</div>
+        <p class="mono" style="font-size:11px; color:var(--slate-500); margin-top:4px;">e-beta.sunat.gob.pe</p>
+      </div>
+      <div class="card" style="margin-bottom:0;">
+        <span class="badge badge-blue">AISLAMIENTO ACTIVO</span>
+        <h4 style="font-size:13px; color:var(--slate-500); margin-top:8px;">Motor Base de Datos Única</h4>
+        <div style="font-size:20px; font-weight:800; margin-top:2px;">3 Empresas (RLS)</div>
+        <p style="font-size:11px; color:var(--slate-500); margin-top:4px;">Particionado lógico por empresa_id</p>
+      </div>
+      <div class="card" style="margin-bottom:0;">
+        <span class="badge badge-amber">1 ALERTA CDT</span>
+        <h4 style="font-size:13px; color:var(--slate-500); margin-top:8px;">Usuarios Monitoreados</h4>
+        <div style="font-size:20px; font-weight:800; margin-top:2px;">6 Usuarios Activos</div>
+        <p style="font-size:11px; color:var(--slate-500); margin-top:4px;">Web App + Terminales Android APK</p>
+      </div>
+    </div>
+
+    <!-- Selección de Empresa Asociada y Configuración de CDT + Usuario SOL Secundario -->
+    <div class="card">
+      <div class="flex-between" style="margin-bottom: 14px;">
+        <div>
+          <h3 style="font-size: 16px; font-weight: 800;">
+            Empresas Asociadas: Estado, Certificado Digital Tributario (CDT) y Usuario SOL Secundario
+          </h3>
+          <p style="font-size: 12px; color: var(--slate-500);">
+            Selecciona cualquier empresa asociada para configurar su CDT (<code class="mono">.pfx/.p12</code>), Usuario SOL secundario y parámetros adicionales de SUNAT:
+          </p>
+        </div>
+      </div>
+
+      <div class="grid-3" id="gridEmpresasAdmin" style="margin-bottom: 20px;"></div>
+
+      <!-- Formulario de Configuración Tributaria de la Empresa Seleccionada -->
+      <div style="background: #f8fafc; border: 1px solid var(--slate-200); border-radius: 12px; padding: 18px;">
+        <div class="flex-between" style="margin-bottom: 14px; border-bottom: 1px solid var(--slate-200); padding-bottom: 10px;">
+          <div>
+            <span class="badge badge-amber" id="lblAdminEmpresaId">CONFIGURANDO EMPRESA ID=1</span>
+            <h4 id="lblAdminEmpresaNombre" style="font-size: 15px; font-weight: 800; margin-top: 4px;"></h4>
+          </div>
+          <span id="lblAdminWsUser" class="mono badge badge-blue"></span>
+        </div>
+
+        <div class="grid-3" style="margin-bottom: 14px;">
+          <div>
+            <label>1. Certificado Digital Tributario (CDT .pfx / .p12)</label>
+            <input type="file" id="inputAdminCdtFile" accept=".pfx,.p12" />
+            <p id="lblAdminCdtActual" style="font-size: 11px; color: var(--slate-600); margin-top: 4px;"></p>
+          </div>
+          <div>
+            <label>Contraseña del Certificado CDT (.pfx/.p12)</label>
+            <input type="password" id="inputAdminCdtPass" value="CertificadoSunat2026*" />
+          </div>
+          <div>
+            <label>Vigencia del Certificado X.509 (Días restantes)</label>
+            <input type="number" id="inputAdminCdtDias" value="365" />
+          </div>
+        </div>
+
+        <div class="grid-4" style="margin-bottom: 14px;">
+          <div>
+            <label>2. Usuario SOL Secundario</label>
+            <input id="inputAdminUsuarioSol" class="mono" />
+          </div>
+          <div>
+            <label>Clave SOL Secundaria (Cifrada AES-GCM)</label>
+            <input type="password" id="inputAdminClaveSol" value="ClaveSolSecundaria2026" />
+          </div>
+          <div>
+            <label>3. Entorno Web Services SUNAT</label>
+            <select id="selectAdminEntorno">
+              <option value="BETA">BETA (Homologación / Pruebas)</option>
+              <option value="PRODUCCION">PRODUCCIÓN (Validez Tributaria)</option>
+            </select>
+          </div>
+          <div>
+            <label>Código Establecimiento Anexo SUNAT</label>
+            <input id="inputAdminAnexo" class="mono" value="0000" />
+          </div>
+        </div>
+
+        <div class="grid-4" style="margin-bottom: 16px;">
+          <div>
+            <label>Tasa IGV General (%)</label>
+            <input type="number" step="0.01" id="inputAdminIgv" value="18.00" />
+          </div>
+          <div>
+            <label>Cuenta Detracciones Banco de la Nación</label>
+            <input id="inputAdminDetraccion" class="mono" value="00-061-045892" />
+          </div>
+          <div>
+            <label>Timeout SOAP SUNAT (Segundos)</label>
+            <input type="number" id="inputAdminTimeout" value="30" />
+          </div>
+          <div>
+            <label>Reintentos Automáticos de Cola CDR</label>
+            <input type="number" id="inputAdminReintentos" value="3" />
+          </div>
+        </div>
+
+        <div class="flex-between">
+          <span id="msgGuardadoAdmin" style="font-size: 12px; font-weight: 700; color: var(--emerald-600);"></span>
+          <button class="btn btn-amber" onclick="guardarConfiguracionAdmin()">
+            💾 Guardar CDT, Usuario SOL y Configuración SUNAT de esta Empresa
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Salud y Estado por cada Usuario del Sistema -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <div class="flex-between" style="padding: 16px 20px; border-bottom: 1px solid var(--slate-200);">
+        <div>
+          <h3 style="font-size: 15px; font-weight: 800;">
+            Estado y Salud por cada Usuario del Sistema (Monitoreo en Tiempo Real)
+          </h3>
+          <p style="font-size: 12px; color: var(--slate-500);">
+            Supervisa el rendimiento, dispositivo (Web o APK), latencia, comprobantes emitidos y alertas de sesión de todos los usuarios por empresa.
+          </p>
+        </div>
+        <div>
+          <select id="selectFiltroUsuarioEmpresa" onchange="renderizarTablaSaludUsuarios()" style="font-size: 12px; font-weight: 700;">
+            <option value="TODOS">Ver usuarios de todas las empresas asociadas</option>
+          </select>
+        </div>
+      </div>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Usuario / Rol</th>
+              <th>Empresa Asignada (`empresa_id`)</th>
+              <th>Canal / Versión APK</th>
+              <th>Última Actividad</th>
+              <th style="text-align:right;">Latencia API</th>
+              <th style="text-align:right;">CPE Emitidos Hoy</th>
+              <th style="text-align:right;">Errores 24h</th>
+              <th>Estado / Salud</th>
+            </tr>
+          </thead>
+          <tbody id="tbodySaludUsuarios"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Modal para Descargar APK Android y Ver XML/CDR -->
+<div id="modalOverlay" class="modal-backdrop" onclick="cerrarModal(event)">
+  <div class="modal" id="modalContent" onclick="event.stopPropagation()"></div>
+</div>
+
+<script>
+  const CATALOGO_TIPOS = [
+    { codigo: "01", nombre: "Factura Electrónica", serie: "F001", interno: false, docLabel: "RUC del Cliente (11 dígitos)" },
+    { codigo: "03", nombre: "Boleta de Venta", serie: "B001", interno: false, docLabel: "DNI (8 dígitos) / RUC" },
+    { codigo: "07", nombre: "Nota de Crédito", serie: "FC01", interno: false, docLabel: "RUC / DNI Documento Modificado" },
+    { codigo: "08", nombre: "Nota de Débito", serie: "FD01", interno: false, docLabel: "RUC / DNI Documento Modificado" },
+    { codigo: "NV", nombre: "Nota de Venta (Interna)", serie: "NV01", interno: true, docLabel: "DNI / RUC / Varios (Uso Interno)" }
+  ];
+
+  const MOTIVOS_NC = [
+    { codigo: "01", texto: "01 - Anulación de la operación" },
+    { codigo: "02", texto: "02 - Anulación por error en el RUC" },
+    { codigo: "04", texto: "04 - Descuento global" },
+    { codigo: "06", texto: "06 - Devolución total" }
+  ];
+
+  const MOTIVOS_ND = [
+    { codigo: "01", texto: "01 - Intereses por mora" },
+    { codigo: "02", texto: "02 - Aumento en el valor" },
+    { codigo: "03", texto: "03 - Penalidades / otros conceptos" }
+  ];
+
+  let empresas = [
+    {
+      id: 1,
+      ruc: "20608945123",
+      razonSocial: "CORPORACIÓN LÁCTEA Y AGROINDUSTRIAL CAJAMARCA S.A.C.",
+      nombreComercial: "AGROCAJAMARCA",
+      entorno: "PRODUCCION",
+      usuarioSol: "FACTSOL01",
+      cdtArchivo: "cdt_20608945123_agrocajamarca.pfx",
+      cdtDias: 245,
+      anexo: "0000",
+      igv: 18.00,
+      detraccion: "00-061-045892",
+      timeout: 30,
+      reintentos: 3
+    },
+    {
+      id: 2,
+      ruc: "20547812369",
+      razonSocial: "SERVICIOS MINEROS Y CONSTRUCCIÓN DEL NORTE E.I.R.L.",
+      nombreComercial: "SERMINCON NORTE",
+      entorno: "BETA",
+      usuarioSol: "MODDATOS",
+      cdtArchivo: "cdt_20547812369_sermincon.p12",
+      cdtDias: 19,
+      anexo: "0001",
+      igv: 18.00,
+      detraccion: "00-061-099124",
+      timeout: 45,
+      reintentos: 5
+    },
+    {
+      id: 3,
+      ruc: "20610459812",
+      razonSocial: "DISTRIBUIDORA FARMACÉUTICA Y EQUIPAMIENTO MÉDICO S.R.L.",
+      nombreComercial: "DIFARMED PERÚ",
+      entorno: "PRODUCCION",
+      usuarioSol: "VENTASWS",
+      cdtArchivo: "cdt_20610459812_difarmed.pfx",
+      cdtDias: 349,
+      anexo: "0000",
+      igv: 18.00,
+      detraccion: "00-061-118340",
+      timeout: 25,
+      reintentos: 3
+    }
+  ];
+
+  let comprobantes = [
+    { id: 1, empresaId: 1, tipo: "01", numero: "F001-00000142", fecha: "2026-10-14 08:15", doc: "20100128218", cliente: "SUPERMERCADOS PERUANOS S.A.", gravada: 2450.00, igv: 441.00, total: 2891.00, interno: false, estado: "ACEPTADO (CDR 0)" },
+    { id: 2, empresaId: 1, tipo: "03", numero: "B001-00000819", fecha: "2026-10-14 09:05", doc: "45891230", cliente: "MARÍA ELENA QUISPE ROJAS", gravada: 110.17, igv: 19.83, total: 130.00, interno: false, estado: "ACEPTADO (CDR 0)" },
+    { id: 3, empresaId: 1, tipo: "NV", numero: "NV01-00000054", fecha: "2026-10-14 09:40", doc: "00000000", cliente: "VENTA DIRECTA MOSTRADOR PLANTA", gravada: 72.03, igv: 12.97, total: 85.00, interno: true, estado: "USO INTERNO (NO ENVIADO A SUNAT)" },
+    { id: 4, empresaId: 2, tipo: "01", numero: "F001-00000089", fecha: "2026-10-14 07:50", doc: "20133023978", cliente: "MINERA YANACOCHA S.R.L.", gravada: 15800.00, igv: 2844.00, total: 18644.00, interno: false, estado: "ACEPTADO BETA (CDR 0)" },
+    { id: 5, empresaId: 2, tipo: "07", numero: "FC01-00000012", fecha: "2026-10-14 10:12", doc: "20133023978", cliente: "MINERA YANACOCHA S.R.L.", gravada: 1200.00, igv: 216.00, total: 1416.00, interno: false, estado: "ACEPTADO BETA (CDR 0)" },
+    { id: 6, empresaId: 2, tipo: "NV", numero: "NV01-00000019", fecha: "2026-10-14 10:35", doc: "41257896", cliente: "ALQUILER MENOR DE EQUIPO TOPOGRÁFICO", gravada: 381.36, igv: 68.64, total: 450.00, interno: true, estado: "USO INTERNO (NO ENVIADO A SUNAT)" },
+    { id: 7, empresaId: 3, tipo: "01", numero: "F001-00000410", fecha: "2026-10-14 08:30", doc: "20451239874", cliente: "CLÍNICA SAN FRANCISCO DE ASÍS S.A.C.", gravada: 4200.00, igv: 756.00, total: 4956.00, interno: false, estado: "ACEPTADO (CDR 0)" }
+  ];
+
+  const usuariosSistema = [
+    { id: 1, empresaId: 0, empresa: "Administración Central (Multi-Tenant)", ruc: "GLOBAL", username: "superadmin", nombre: "Ing. Valeria Castañeda", rol: "SUPERADMIN", disp: "Web Console Admin", acceso: "Hace 1 min", latencia: 31, emitidos: 0, errores: 0, salud: "OPTIMO" },
+    { id: 2, empresaId: 1, empresa: "AGROCAJAMARCA", ruc: "20608945123", username: "carlos.cajamarca", nombre: "Carlos Mendoza", rol: "ADMIN_EMPRESA", disp: "Web App (Chrome)", acceso: "Hace 2 min", latencia: 46, emitidos: 18, errores: 0, salud: "OPTIMO" },
+    { id: 3, empresaId: 1, empresa: "AGROCAJAMARCA", ruc: "20608945123", username: "lucia.caja1", nombre: "Lucía Vargas", rol: "OPERADOR_CAJA", disp: "Android APK v2.4.0 (POS)", acceso: "Hace 30 seg", latencia: 58, emitidos: 34, errores: 0, salud: "OPTIMO" },
+    { id: 4, empresaId: 2, empresa: "SERMINCON NORTE", ruc: "20547812369", username: "jorge.sermincon", nombre: "Jorge Salazar", rol: "ADMIN_EMPRESA", disp: "Web App (Edge)", acceso: "Hace 8 min", latencia: 52, emitidos: 9, errores: 0, salud: "OPTIMO" },
+    { id: 5, empresaId: 2, empresa: "SERMINCON NORTE", ruc: "20547812369", username: "pedro.logistica", nombre: "Pedro Rojas", rol: "OPERADOR_CAJA", disp: "Android APK v2.4.0", acceso: "Hace 4 min", latencia: 245, emitidos: 12, errores: 3, salud: "ADVERTENCIA" },
+    { id: 6, empresaId: 3, empresa: "DIFARMED PERÚ", ruc: "20610459812", username: "elena.difarmed", nombre: "Dra. Elena Villanueva", rol: "ADMIN_EMPRESA", disp: "Web App (Safari)", acceso: "Hace 3 min", latencia: 41, emitidos: 27, errores: 0, salud: "OPTIMO" }
+  ];
+
+  let empresaClienteId = 1;
+  let empresaAdminId = 1;
+  let tipoSeleccionado = "01";
+
+  function inicializarApp() {
+    renderizarSelectorEmpresasCliente();
+    renderizarTiposDocumento();
+    recalcularTotales();
+    actualizarVistaCliente();
+    renderizarPanelAdmin();
+    renderizarFiltroUsuariosEmpresa();
+    renderizarTablaSaludUsuarios();
+  }
+
+  function cambiarComponente(comp) {
+    document.getElementById("vistaCliente").style.display = comp === "CLIENTE" ? "block" : "none";
+    document.getElementById("vistaAdmin").style.display = comp === "ADMIN" ? "block" : "none";
+    document.getElementById("btnTabCliente").className = comp === "CLIENTE" ? "tab-btn active-client" : "tab-btn";
+    document.getElementById("btnTabAdmin").className = comp === "ADMIN" ? "tab-btn active-admin" : "tab-btn";
+  }
+
+  function renderizarSelectorEmpresasCliente() {
+    const sel = document.getElementById("selectEmpresaCliente");
+    sel.innerHTML = empresas.map(e =>
+      `<option value="${e.id}" ${e.id === empresaClienteId ? "selected" : ""}>[empresa_id=${e.id}] RUC ${e.ruc} — ${e.razonSocial}</option>`
+    ).join("");
+  }
+
+  function cambiarEmpresaCliente() {
+    empresaClienteId = Number(document.getElementById("selectEmpresaCliente").value);
+    actualizarVistaCliente();
+  }
+
+  function renderizarTiposDocumento() {
+    const grid = document.getElementById("gridTiposDoc");
+    grid.innerHTML = CATALOGO_TIPOS.map(t => {
+      const selClass = t.codigo === tipoSeleccionado ? (t.interno ? "selected-internal" : "selected") : "";
+      return `
+        <div class="doc-card ${selClass}" onclick="seleccionarTipoDoc('${t.codigo}')">
+          <div style="font-size:11px; font-weight:800; opacity:0.85;">CÓDIGO ${t.codigo}</div>
+          <div style="font-size:14px; font-weight:800; margin-top:2px;">${t.nombre}</div>
+          <div style="font-size:11px; margin-top:6px; opacity:0.9;">
+            ${t.interno ? "🔒 Uso Interno (No SUNAT)" : "⚡ Envío Directo SUNAT"}
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function seleccionarTipoDoc(codigo) {
+    tipoSeleccionado = codigo;
+    const meta = CATALOGO_TIPOS.find(t => t.codigo === codigo);
+    document.getElementById("inputSerie").value = meta.serie;
+    document.getElementById("labelTipoDocCliente").innerText = meta.docLabel;
+    document.getElementById("avisoNotaVentaInterna").style.display = meta.interno ? "block" : "none";
+    document.getElementById("bloqueReferenciaNota").style.display = (codigo === "07" || codigo === "08") ? "block" : "none";
+
+    if (codigo === "07" || codigo === "08") {
+      const lista = codigo === "07" ? MOTIVOS_NC : MOTIVOS_ND;
+      document.getElementById("labelCatalogoNota").innerText = codigo === "07" ? "Motivo SUNAT (Catálogo 09 - NC)" : "Motivo SUNAT (Catálogo 10 - ND)";
+      document.getElementById("selectMotivoNota").innerHTML = lista.map(m => `<option value="${m.codigo}">${m.texto}</option>`).join("");
+    }
+
+    const emp = empresas.find(e => e.id === empresaClienteId);
+    const badge = document.getElementById("badgeDestinoActual");
+    const btn = document.getElementById("btnEmitir");
+    if (meta.interno) {
+      badge.className = "badge badge-purple";
+      badge.innerText = "USO INTERNO EXCLUSIVO — SIN ENVÍO A SUNAT";
+      btn.className = "btn btn-purple";
+      btn.innerText = "🔒 Registrar Nota de Venta Interna (No se envía a SUNAT)";
+    } else {
+      badge.className = "badge badge-green";
+      badge.innerText = `ENVÍO DIRECTO A SUNAT (${emp.entorno})`;
+      btn.className = "btn btn-primary";
+      btn.innerText = `⚡ Firmar XML con CDT (${emp.cdtArchivo}) y Enviar a SUNAT`;
+    }
+    renderizarTiposDocumento();
+  }
+
+  function recalcularTotales() {
+    const cant = Number(document.getElementById("inputItemCant").value || 0);
+    const precio = Number(document.getElementById("inputItemPrecio").value || 0);
+    const total = cant * precio;
+    const gravada = total / 1.18;
+    const igv = total - gravada;
+    document.getElementById("lblGravada").innerText = "S/ " + gravada.toFixed(2);
+    document.getElementById("lblIgv").innerText = "S/ " + igv.toFixed(2);
+    document.getElementById("lblTotal").innerText = "S/ " + total.toFixed(2);
+  }
+
+  function actualizarVistaCliente() {
+    const emp = empresas.find(e => e.id === empresaClienteId);
+    document.getElementById("tituloEmisionEmpresa").innerText = `Emitir Comprobante — ${emp.razonSocial} (RUC ${emp.ruc})`;
+    document.getElementById("subtituloConexionSunat").innerText =
+      `CDT Activo: ${emp.cdtArchivo} | Usuario SOL WS: ${emp.ruc}${emp.usuarioSol} | Entorno SUNAT: ${emp.entorno}`;
+    document.getElementById("tituloTablaComprobantes").innerText =
+      `Comprobantes Emitidos por ${emp.nombreComercial} (RUC ${emp.ruc})`;
+    document.getElementById("lblFiltroSql").innerText = `empresa_id = ${emp.id}`;
+
+    seleccionarTipoDoc(tipoSeleccionado);
+
+    const filtrados = comprobantes.filter(c => c.empresaId === emp.id);
+    document.getElementById("contadorRegistrosEmpresa").innerText = `${filtrados.length} comprobantes aislados`;
+
+    const tbody = document.getElementById("tbodyComprobantesCliente");
+    tbody.innerHTML = filtrados.map(c => `
+      <tr>
+        <td class="mono" style="font-weight:800;">${c.numero}</td>
+        <td><span class="badge ${c.interno ? 'badge-purple' : 'badge-blue'}">${c.tipo}</span></td>
+        <td>${c.fecha}</td>
+        <td><strong>${c.cliente}</strong><br/><span class="mono" style="font-size:11px; color:var(--slate-500);">${c.doc}</span></td>
+        <td style="text-align:right;">S/ ${c.gravada.toFixed(2)}</td>
+        <td style="text-align:right;">S/ ${c.igv.toFixed(2)}</td>
+        <td style="text-align:right; font-weight:800;">S/ ${c.total.toFixed(2)}</td>
+        <td>
+          <span class="badge ${c.interno ? 'badge-purple' : 'badge-green'}">${c.estado}</span>
+        </td>
+        <td>
+          <button class="btn" style="padding:5px 10px; font-size:11px; background:#e2e8f0;" onclick="verDetalleComprobante(${c.id})">
+            ${c.interno ? '📄 Ver Ticket Interno' : '🔍 Ver XML UBL 2.1 / CDR'}
+          </button>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  function emitirComprobante() {
+    const emp = empresas.find(e => e.id === empresaClienteId);
+    const serie = document.getElementById("inputSerie").value.trim().toUpperCase();
+    const doc = document.getElementById("inputClienteDoc").value.trim();
+    const cliente = document.getElementById("inputClienteNombre").value.trim();
+    const cant = Number(document.getElementById("inputItemCant").value || 1);
+    const precio = Number(document.getElementById("inputItemPrecio").value || 0);
+    const total = cant * precio;
+    const gravada = total / 1.18;
+    const igv = total - gravada;
+    const esInterno = (tipoSeleccionado === "NV");
+
+    const corr = comprobantes.filter(c => c.empresaId === emp.id && c.tipo === tipoSeleccionado).length + 151;
+    const numero = `${serie}-${String(corr).padStart(8, "0")}`;
+
+    const nuevo = {
+      id: Date.now(),
+      empresaId: emp.id,
+      tipo: tipoSeleccionado,
+      numero,
+      fecha: "2026-10-14 " + new Date().toTimeString().slice(0,5),
+      doc,
+      cliente,
+      gravada,
+      igv,
+      total,
+      interno: esInterno,
+      estado: esInterno ? "USO INTERNO (NO ENVIADO A SUNAT)" : `ACEPTADO ${emp.entorno} (CDR 0)`
+    };
+
+    comprobantes.unshift(nuevo);
+    actualizarVistaCliente();
+    verDetalleComprobante(nuevo.id);
+  }
+
+  function verDetalleComprobante(id) {
+    const c = comprobantes.find(x => x.id === id);
+    const emp = empresas.find(e => e.id === c.empresaId);
+    const modal = document.getElementById("modalContent");
+
+    if (c.interno) {
+      modal.innerHTML = `
+        <span class="badge badge-purple">CONTROL INTERNO — EXCLUIDO DE SUNAT</span>
+        <h3 style="font-size:18px; margin-top:8px;">Nota de Venta Interna ${c.numero}</h3>
+        <p style="font-size:13px; color:var(--slate-600); margin-top:4px;">
+          Emitida bajo <strong>${emp.razonSocial}</strong> (<code class="mono">empresa_id=${emp.id}</code>).
+          Por regla de negocio, las Notas de Venta son de uso interno y no generan XML UBL 2.1 ni se envían a los Web Services de SUNAT.
+        </p>
+        <pre>================================================
+NOTA DE VENTA INTERNA: ${c.numero}
+EMPRESA: ${emp.razonSocial} (RUC ${emp.ruc})
+CLIENTE: ${c.cliente} (${c.doc})
+FECHA  : ${c.fecha}
+------------------------------------------------
+SUBTOTAL: S/ ${c.gravada.toFixed(2)}
+IGV REF.: S/ ${c.igv.toFixed(2)}
+TOTAL   : S/ ${c.total.toFixed(2)}
+------------------------------------------------
+ESTADO  : USO INTERNO (NO ENVIADO A SUNAT)
+================================================</pre>
+        <div style="margin-top:16px; text-align:right;">
+          <button class="btn btn-dark" onclick="cerrarModal()">Cerrar</button>
+        </div>
+      `;
+    } else {
+      modal.innerHTML = `
+        <span class="badge badge-green">COMPROBANTE ELECTRÓNICO UBL 2.1 ACEPTADO EN SUNAT</span>
+        <h3 style="font-size:18px; margin-top:8px;">${c.numero} — Firmado con CDT y Validado</h3>
+        <p style="font-size:12px; color:var(--slate-600); margin-top:4px;">
+          Enviado directo a SUNAT (<code class="mono">${emp.entorno}</code>) con Usuario SOL Secundario <code class="mono">${emp.ruc}${emp.usuarioSol}</code> y Certificado <code class="mono">${emp.cdtArchivo}</code>.
+        </p>
+        <pre>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+         xmlns:ds="http://www.w3.org/2000/09/xmldsig#"&gt;
+  &lt;cbc:UBLVersionID&gt;2.1&lt;/cbc:UBLVersionID&gt;
+  &lt;cbc:CustomizationID&gt;2.0&lt;/cbc:CustomizationID&gt;
+  &lt;cbc:ID&gt;${c.numero}&lt;/cbc:ID&gt;
+  &lt;cbc:InvoiceTypeCode listID="0101"&gt;${c.tipo}&lt;/cbc:InvoiceTypeCode&gt;
+  &lt;cac:AccountingSupplierParty&gt;
+    &lt;cbc:ID schemeID="6"&gt;${emp.ruc}&lt;/cbc:ID&gt;
+    &lt;cbc:RegistrationName&gt;${emp.razonSocial}&lt;/cbc:RegistrationName&gt;
+  &lt;/cac:AccountingSupplierParty&gt;
+  &lt;cac:AccountingCustomerParty&gt;
+    &lt;cbc:ID&gt;${c.doc}&lt;/cbc:ID&gt;
+    &lt;cbc:RegistrationName&gt;${c.cliente}&lt;/cbc:RegistrationName&gt;
+  &lt;/cac:AccountingCustomerParty&gt;
+  &lt;cac:LegalMonetaryTotal&gt;
+    &lt;cbc:PayableAmount currencyID="PEN"&gt;${c.total.toFixed(2)}&lt;/cbc:PayableAmount&gt;
+  &lt;/cac:LegalMonetaryTotal&gt;
+&lt;/Invoice&gt;</pre>
+        <div style="margin-top:16px; text-align:right;">
+          <button class="btn btn-dark" onclick="cerrarModal()">Cerrar</button>
+        </div>
+      `;
+    }
+    document.getElementById("modalOverlay").style.display = "flex";
+  }
+
+  function abrirModalApk() {
+    const emp = empresas.find(e => e.id === empresaClienteId);
+    const modal = document.getElementById("modalContent");
+    modal.innerHTML = `
+      <span class="badge badge-green">INSTALADOR MÓVIL ANDROID OFICIAL</span>
+      <h3 style="font-size:18px; margin-top:8px;">Descargar APK para Cliente — FacturadorSUNAT v2.4.0</h3>
+      <p style="font-size:13px; color:var(--slate-600); margin-top:6px;">
+        La aplicación móvil Android se conecta al mismo backend Multi-Tenant aislando la sesión para
+        <strong>${emp.razonSocial} (RUC ${emp.ruc})</strong>. Permite emitir Facturas, Boletas, NC/ND a SUNAT y Notas de Venta internas con impresión térmica Bluetooth.
+      </p>
+      <div style="background:#f8fafc; border:1px solid var(--slate-200); border-radius:12px; padding:14px; margin-top:14px; font-size:12px;">
+        <div><strong>Archivo:</strong> <code class="mono">FacturadorSUNAT-Cliente-v2.4.0.apk</code> (14.8 MB)</div>
+        <div style="margin-top:4px;"><strong>SHA-256:</strong> <code class="mono">8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4</code></div>
+        <div style="margin-top:4px;"><strong>Empresa Preconfigurada:</strong> <code class="mono">empresa_id=${emp.id} (${emp.ruc})</code></div>
+      </div>
+      <div style="margin-top:18px; display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn" style="background:#e2e8f0;" onclick="cerrarModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="descargarArchivoApkSimulado()">⬇ Descargar FacturadorSUNAT-Cliente-v2.4.0.apk</button>
+      </div>
+    `;
+    document.getElementById("modalOverlay").style.display = "flex";
+  }
+
+  function descargarArchivoApkSimulado() {
+    const blob = new Blob(
+      ["PK\x03\x04 FacturadorSUNAT Android APK Package v2.4.0 Multi-Tenant"],
+      { type: "application/vnd.android.package-archive" }
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "FacturadorSUNAT-Cliente-v2.4.0.apk";
+    a.click();
+    URL.revokeObjectURL(url);
+    cerrarModal();
+  }
+
+  function renderizarPanelAdmin() {
+    const grid = document.getElementById("gridEmpresasAdmin");
+    grid.innerHTML = empresas.map(e => {
+      const cpeCount = comprobantes.filter(c => c.empresaId === e.id && !c.interno).length;
+      const nvCount = comprobantes.filter(c => c.empresaId === e.id && c.interno).length;
+      const badgeSalud = e.cdtDias <= 30
+        ? `<span class="badge badge-amber">ADVERTENCIA CDT (${e.cdtDias}d)</span>`
+        : `<span class="badge badge-green">SALUD ÓPTIMA (${e.cdtDias}d)</span>`;
+
+      return `
+        <div class="tenant-card ${e.id === empresaAdminId ? 'active' : ''}" onclick="seleccionarEmpresaAdmin(${e.id})">
+          <div class="flex-between">
+            <span class="mono" style="font-size:12px; font-weight:800; color:var(--slate-600);">RUC ${e.ruc}</span>
+            ${badgeSalud}
+          </div>
+          <div style="font-size:14px; font-weight:800; margin-top:6px;">${e.razonSocial}</div>
+          <div style="font-size:12px; color:var(--slate-600); margin-top:8px;">
+            <div>🔑 <strong>CDT:</strong> <code class="mono">${e.cdtArchivo}</code></div>
+            <div>👤 <strong>SOL WS:</strong> <code class="mono">${e.ruc}${e.usuarioSol}</code></div>
+            <div>🌐 <strong>Entorno:</strong> <strong>${e.entorno}</strong> | Anexo: <code class="mono">${e.anexo}</code></div>
+            <div style="margin-top:6px; padding-top:6px; border-top:1px dashed #cbd5e1;">
+              📊 Aislamiento (<code class="mono">empresa_id=${e.id}</code>): <strong>${cpeCount} CPE SUNAT</strong> | <strong>${nvCount} Notas Venta Internas</strong>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    const emp = empresas.find(e => e.id === empresaAdminId);
+    document.getElementById("lblAdminEmpresaId").innerText = `CONFIGURANDO EMPRESA_ID = ${emp.id} (DATOS AISLADOS)`;
+    document.getElementById("lblAdminEmpresaNombre").innerText = `${emp.razonSocial} (RUC ${emp.ruc})`;
+    document.getElementById("lblAdminWsUser").innerText = `WS-Security Username: ${emp.ruc}${emp.usuarioSol}`;
+    document.getElementById("lblAdminCdtActual").innerText = `Certificado actual cargado: ${emp.cdtArchivo}`;
+    document.getElementById("inputAdminCdtDias").value = emp.cdtDias;
+    document.getElementById("inputAdminUsuarioSol").value = emp.usuarioSol;
+    document.getElementById("selectAdminEntorno").value = emp.entorno;
+    document.getElementById("inputAdminAnexo").value = emp.anexo;
+    document.getElementById("inputAdminIgv").value = emp.igv;
+    document.getElementById("inputAdminDetraccion").value = emp.detraccion;
+    document.getElementById("inputAdminTimeout").value = emp.timeout;
+    document.getElementById("inputAdminReintentos").value = emp.reintentos;
+  }
+
+  function seleccionarEmpresaAdmin(id) {
+    empresaAdminId = id;
+    document.getElementById("msgGuardadoAdmin").innerText = "";
+    renderizarPanelAdmin();
+  }
+
+  function guardarConfiguracionAdmin() {
+    const emp = empresas.find(e => e.id === empresaAdminId);
+    const fileInput = document.getElementById("inputAdminCdtFile");
+    if (fileInput.files && fileInput.files.length > 0) {
+      emp.cdtArchivo = fileInput.files[0].name;
+    }
+    emp.cdtDias = Number(document.getElementById("inputAdminCdtDias").value || 365);
+    emp.usuarioSol = document.getElementById("inputAdminUsuarioSol").value.trim().toUpperCase();
+    emp.entorno = document.getElementById("selectAdminEntorno").value;
+    emp.anexo = document.getElementById("inputAdminAnexo").value.trim();
+    emp.igv = Number(document.getElementById("inputAdminIgv").value || 18);
+    emp.detraccion = document.getElementById("inputAdminDetraccion").value.trim();
+    emp.timeout = Number(document.getElementById("inputAdminTimeout").value || 30);
+    emp.reintentos = Number(document.getElementById("inputAdminReintentos").value || 3);
+
+    renderizarPanelAdmin();
+    renderizarSelectorEmpresasCliente();
+    actualizarVistaCliente();
+    document.getElementById("msgGuardadoAdmin").innerText =
+      `✔ Configuración SUNAT, CDT (${emp.cdtArchivo}) y Usuario SOL (${emp.ruc}${emp.usuarioSol}) guardados para ${emp.nombreComercial}.`;
+  }
+
+  function renderizarFiltroUsuariosEmpresa() {
+    const sel = document.getElementById("selectFiltroUsuarioEmpresa");
+    sel.innerHTML = `<option value="TODOS">Todas las empresas asociadas (Vista Global SuperAdmin)</option>` +
+      empresas.map(e => `<option value="${e.id}">Solo usuarios de ${e.nombreComercial} (empresa_id=${e.id})</option>`).join("");
+  }
+
+  function renderizarTablaSaludUsuarios() {
+    const filtro = document.getElementById("selectFiltroUsuarioEmpresa").value;
+    const lista = filtro === "TODOS"
+      ? usuariosSistema
+      : usuariosSistema.filter(u => String(u.empresaId) === String(filtro));
+
+    const tbody = document.getElementById("tbodySaludUsuarios");
+    tbody.innerHTML = lista.map(u => `
+      <tr>
+        <td><strong>${u.nombre}</strong><br/><span class="mono" style="font-size:11px; color:var(--slate-500);">${u.username} • ${u.rol}</span></td>
+        <td><strong>${u.empresa}</strong><br/><span class="mono" style="font-size:11px; color:var(--slate-500);">RUC: ${u.ruc} | empresa_id=${u.empresaId || 'GLOBAL'}</span></td>
+        <td>${u.disp}</td>
+        <td>${u.acceso}</td>
+        <td class="mono" style="text-align:right;">${u.latencia} ms</td>
+        <td style="text-align:right; font-weight:800;">${u.emitidos}</td>
+        <td style="text-align:right; font-weight:800; color:${u.errores > 0 ? 'var(--red-600)' : 'inherit'};">${u.errores}</td>
+        <td>
+          <span class="badge ${u.salud === 'OPTIMO' ? 'badge-green' : 'badge-amber'}">${u.salud}</span>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  function cerrarModal() {
+    document.getElementById("modalOverlay").style.display = "none";
+  }
+
+  window.onload = inicializarApp;
+</script>
+</body>
+</html>

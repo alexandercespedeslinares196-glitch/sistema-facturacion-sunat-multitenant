@@ -1,0 +1,16 @@
+{
+  "appId": "pe.sunat.facturador.multitenant",
+  "appName": "Facturador SUNAT Multiempresa",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "cleartext": false
+  },
+  "android": {
+    "buildOptions": {
+      "keystorePath": "keystore/facturador-release.jks",
+      "keystoreAlias": "facturador_sunat_key"
+    }
+  }
+}
